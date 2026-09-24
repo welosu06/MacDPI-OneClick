@@ -9,7 +9,7 @@ MacDPI OneClick is a macOS installer and control center for [MacDPI](https://git
 ## Quick start
 
 1. Open the [latest release](https://github.com/welosu06/MacDPI-OneClick/releases/latest).
-2. Download **MacDPI-OneClick-v1.3.0.zip** from **Assets**.
+2. Download **MacDPI-OneClick-v1.4.0.zip** from **Assets**.
 3. Extract the ZIP.
 4. Double-click **MacDPI.command**.
 5. If macOS blocks it, right-click **MacDPI.command** → **Open** → **Open**.
@@ -43,6 +43,7 @@ The backup records the previous DHCP/manual configuration, IP address, subnet ma
 MacDPI OneClick also:
 
 - checks for a potential `.240` LAN address conflict before enabling global mode;
+- if `.240` is already in use, it warns instead of aborting immediately; upstream MacDPI may continue without applying that static address, then MacDPI OneClick verifies internet connectivity and rolls back automatically if the connection is not healthy;
 - pins MacDPI to the reviewed upstream commit `30556c5dd90d23819e32b4c2bfb8b8b670cde8a4` instead of silently using whatever happens to be newest on `main`;
 - builds ByeDPI/ciadpi and sing-box locally rather than shipping opaque third-party binaries;
 - tests internet connectivity after installation and each enable operation;
