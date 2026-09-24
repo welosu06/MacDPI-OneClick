@@ -5,7 +5,7 @@ macOS için sistem-geneli MacDPI kurulum ve kontrol paketi.
 ## Hiç Bilmeyen Biri İçin Kurulum / Beginner Setup
 
 1. GitHub'da **Releases** bölümünü aç / Open **Releases** on GitHub.
-2. **MacDPI-OneClick-v1.3.0.zip** dosyasını indir / Download **MacDPI-OneClick-v1.3.0.zip**.
+2. **MacDPI-OneClick-v1.4.0.zip** dosyasını indir / Download **MacDPI-OneClick-v1.4.0.zip**.
 3. ZIP dosyasını aç / Extract the ZIP.
 4. **MacDPI.command** dosyasına çift tıkla / Double-click **MacDPI.command**.
 5. Mac uyarı verirse dosyaya sağ tık → **Aç / Open** → **Aç / Open**.
@@ -36,6 +36,7 @@ Yedekte DHCP veya manuel ağ yapılandırması, IP adresi, subnet mask, router v
 Ek güvenlik önlemleri:
 
 - Global mod açılmadan önce `.240` IP çakışması kontrol edilir.
+- `.240` başka bir cihaz tarafından kullanılıyorsa kurulum artık doğrudan kesilmez. Uyarı verilir; upstream MacDPI statik IP'yi atlayarak mevcut DHCP bağlantısıyla devam edebilir. Ardından internet testi yapılır. Test başarısızsa servis durdurulur ve yedeklenen ağ ayarları otomatik geri yüklenir.
 - MacDPI, değişebilen `main` dalı yerine kontrol edilmiş `30556c5dd90d23819e32b4c2bfb8b8b670cde8a4` commit'ine sabitlenmiştir.
 - Üçüncü taraf hazır binary dağıtılmaz; bileşenler Mac üzerinde kaynak koddan derlenir.
 - Kurulumdan ve DPI'yi açtıktan sonra internet bağlantısı otomatik test edilir.
