@@ -21,7 +21,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          VERSION="v1.1.0"
+          VERSION="v1.2.0"
           PACKAGE="MacDPI-OneClick-${VERSION}"
 
           rm -rf "${PACKAGE}" "${PACKAGE}.zip" verify
@@ -44,19 +44,19 @@ jobs:
 
           shasum -a 256 "${PACKAGE}.zip" > "${PACKAGE}.zip.sha256"
 
-      - name: Publish v1.1.0
+      - name: Publish v1.2.0
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          VERSION="v1.1.0"
+          VERSION="v1.2.0"
           ZIP="MacDPI-OneClick-${VERSION}.zip"
           SHA="${ZIP}.sha256"
-          NOTES="MacDPI OneClick v1.1.0 introduces a single-terminal Control Center. Download MacDPI-OneClick-v1.1.0.zip, extract it, then open MacDPI.command. Choose Install, Enable, Disable, Status, Update/Repair, or Uninstall from one menu. The ZIP is built on macOS and verified to preserve executable permissions. Supports Apple Silicon M1-M5 and Intel Macs. macOS may require Right-click > Open on first launch because the project is not Apple-notarized."
+          NOTES="MacDPI OneClick v1.2.0 adds a bilingual beginner-friendly Control Center and a Desktop shortcut. Download MacDPI-OneClick-v1.2.0.zip, extract it, then open MacDPI.command. First-time users simply type 1 and press Enter. After installation, MacDPI OneClick.command is placed on the Desktop for future use. The ZIP is built on macOS and verified to preserve executable permissions. Supports Apple Silicon M1-M5 and Intel Macs. macOS may require Right-click > Open on first launch because the project is not Apple-notarized."
 
           if gh release view "${VERSION}" >/dev/null 2>&1; then
             gh release upload "${VERSION}" "${ZIP}" "${SHA}" --clobber
           else
-            gh release create "${VERSION}" "${ZIP}" "${SHA}" --target "${GITHUB_SHA}" --title "MacDPI OneClick v1.1.0" --notes "${NOTES}"
+            gh release create "${VERSION}" "${ZIP}" "${SHA}" --target "${GITHUB_SHA}" --title "MacDPI OneClick v1.2.0" --notes "${NOTES}"
           fi
