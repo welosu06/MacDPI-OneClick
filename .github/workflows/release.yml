@@ -17,17 +17,29 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Validate shell syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash -n MacDPI.command
+          bash -n Install.command
+          bash -n DPI_Ac.command
+          bash -n DPI_Kapat.command
+          bash -n Durum.command
+          bash -n Kaldir.command
+          bash -n NetworkSafety.sh
+
       - name: Build Mac-friendly ZIP
         shell: bash
         run: |
           set -euo pipefail
-          VERSION="v1.2.0"
+          VERSION="v1.3.0"
           PACKAGE="MacDPI-OneClick-${VERSION}"
 
           rm -rf "${PACKAGE}" "${PACKAGE}.zip" verify
           mkdir -p "${PACKAGE}"
 
-          cp MacDPI.command Install.command DPI_Ac.command DPI_Kapat.command Durum.command Kaldir.command README.md LICENSE "${PACKAGE}/"
+          cp MacDPI.command Install.command DPI_Ac.command DPI_Kapat.command Durum.command Kaldir.command NetworkSafety.sh README.md README_TR.md SECURITY.md LICENSE "${PACKAGE}/"
           chmod 755 "${PACKAGE}"/*.command
 
           /usr/bin/ditto -c -k --keepParent "${PACKAGE}" "${PACKAGE}.zip"
@@ -41,22 +53,24 @@ jobs:
           test -x "verify/${PACKAGE}/DPI_Kapat.command"
           test -x "verify/${PACKAGE}/Durum.command"
           test -x "verify/${PACKAGE}/Kaldir.command"
+          test -f "verify/${PACKAGE}/NetworkSafety.sh"
+          test -f "verify/${PACKAGE}/SECURITY.md"
 
           shasum -a 256 "${PACKAGE}.zip" > "${PACKAGE}.zip.sha256"
 
-      - name: Publish v1.2.0
+      - name: Publish v1.3.0
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          VERSION="v1.2.0"
+          VERSION="v1.3.0"
           ZIP="MacDPI-OneClick-${VERSION}.zip"
           SHA="${ZIP}.sha256"
-          NOTES="MacDPI OneClick v1.2.0 adds a bilingual beginner-friendly Control Center and a Desktop shortcut. Download MacDPI-OneClick-v1.2.0.zip, extract it, then open MacDPI.command. First-time users simply type 1 and press Enter. After installation, MacDPI OneClick.command is placed on the Desktop for future use. The ZIP is built on macOS and verified to preserve executable permissions. Supports Apple Silicon M1-M5 and Intel Macs. macOS may require Right-click > Open on first launch because the project is not Apple-notarized."
+          NOTES="MacDPI OneClick v1.3.0 adds fail-safe network protection. It backs up the existing DHCP/manual IP and DNS configuration, checks for .240 address conflicts, pins MacDPI to reviewed commit 30556c5dd90d23819e32b4c2bfb8b8b670cde8a4, tests connectivity after enabling, and automatically restores the saved network configuration if activation fails. Disable and uninstall actions also restore the saved network settings. Includes bilingual beginner instructions and the Desktop Control Center."
 
           if gh release view "${VERSION}" >/dev/null 2>&1; then
             gh release upload "${VERSION}" "${ZIP}" "${SHA}" --clobber
           else
-            gh release create "${VERSION}" "${ZIP}" "${SHA}" --target "${GITHUB_SHA}" --title "MacDPI OneClick v1.2.0" --notes "${NOTES}"
+            gh release create "${VERSION}" "${ZIP}" "${SHA}" --target "${GITHUB_SHA}" --title "MacDPI OneClick v1.3.0" --notes "${NOTES}"
           fi
