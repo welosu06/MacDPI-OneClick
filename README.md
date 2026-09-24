@@ -13,7 +13,7 @@ Browser-only proxy tools can work in one app and fail in another. MacDPI OneClic
 ## Quick start
 
 1. Open the [latest release](https://github.com/welosu06/MacDPI-OneClick/releases/latest).
-2. Download **MacDPI-OneClick-v1.1.0.zip** from **Assets**.
+2. Download **MacDPI-OneClick-v1.2.0.zip** from **Assets**.
 3. Extract the ZIP.
 4. Double-click **MacDPI.command**.
 5. If macOS blocks the first launch, right-click **MacDPI.command** → **Open** → **Open**.
@@ -21,7 +21,7 @@ Browser-only proxy tools can work in one app and fail in another. MacDPI OneClic
 
 > Use the ZIP from **Releases / Assets**, not the repository's **Code → Download ZIP** archive. The release package is built on macOS and preserves executable permissions for the launchers.
 
-After setup, the installer leaves a single **MacDPI.command** control center on your Desktop.
+After setup, the installer creates a single **MacDPI OneClick.command** shortcut on your Desktop. Open that shortcut any time to return to the bilingual control center.
 
 Inside that one terminal menu:
 
