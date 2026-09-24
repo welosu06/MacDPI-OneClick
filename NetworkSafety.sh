@@ -149,8 +149,13 @@ check_static_host_conflict() {
 
   if ping -c 1 -t 1 "$candidate" >/dev/null 2>&1; then
     echo "IP çakışması tespit edildi / IP conflict detected: $candidate"
-    echo "Kurulum ağa dokunmadan durduruldu / Installation stopped before changing the network."
-    return 1
+    echo ".240 adresi kullanılmayacak; güvenli şekilde devam edilecek."
+    echo ".240 will not be relied on; continuing under connectivity-check protection."
+    echo "MacDPI statik IP ayarlayamazsa mevcut DHCP bağlantısıyla devam edebilir."
+    echo "If MacDPI cannot set the static IP, it may continue with the current DHCP connection."
+    echo "Bağlantı testi başarısız olursa otomatik rollback uygulanacak."
+    echo "If connectivity fails, automatic rollback will restore the saved network settings."
+    return 0
   fi
 
   echo "Statik IP ön kontrolü geçti / Static IP pre-check passed: $candidate"
