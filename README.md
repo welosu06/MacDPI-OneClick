@@ -13,22 +13,27 @@ Browser-only proxy tools can work in one app and fail in another. MacDPI OneClic
 ## Quick start
 
 1. Open the [latest release](https://github.com/welosu06/MacDPI-OneClick/releases/latest).
-2. Download **MacDPI-OneClick-v1.0.0.zip** from **Assets**.
+2. Download **MacDPI-OneClick-v1.1.0.zip** from **Assets**.
 3. Extract the ZIP.
-4. Double-click **Install.command**.
-5. If macOS blocks the first launch, right-click **Install.command** → **Open** → **Open**.
+4. Double-click **MacDPI.command**.
+5. If macOS blocks the first launch, right-click **MacDPI.command** → **Open** → **Open**.
 6. Enter your macOS administrator password when requested and wait for setup to finish.
 
 > Use the ZIP from **Releases / Assets**, not the repository's **Code → Download ZIP** archive. The release package is built on macOS and preserves executable permissions for the launchers.
 
-After setup, the installer copies four launchers to your Desktop:
+After setup, the installer leaves a single **MacDPI.command** control center on your Desktop.
 
-| File | Action |
+Inside that one terminal menu:
+
+| Option | Action |
 | --- | --- |
-| `DPI_Ac.command` | Enable/restart global DPI bypass |
-| `DPI_Kapat.command` | Stop the service and restore normal networking |
-| `Durum.command` | Show service status and recent logs |
-| `Kaldir.command` | Remove MacDPI OneClick |
+| 1 | Install MacDPI |
+| 2 | Enable DPI bypass |
+| 3 | Disable DPI bypass / return to normal networking |
+| 4 | Check connection and service status |
+| 5 | Update / repair the installation |
+| 6 | Completely remove MacDPI OneClick |
+| 0 | Exit |
 
 ## What the installer does
 
