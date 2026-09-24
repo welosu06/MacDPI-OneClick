@@ -1,9 +1,6 @@
 name: Build macOS Release
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 permissions:
@@ -39,7 +36,7 @@ jobs:
           rm -rf "${PACKAGE}" "${PACKAGE}.zip" verify
           mkdir -p "${PACKAGE}"
 
-          cp MacDPI.command Install.command DPI_Ac.command DPI_Kapat.command Durum.command Kaldir.command NetworkSafety.sh README.md README_TR.md SECURITY.md LICENSE "${PACKAGE}/"
+          cp MacDPI.command Install.command DPI_Ac.command DPI_Kapat.command Durum.command Kaldir.command NetworkSafety.sh README.md README_TR.md SECURITY.md CHANGELOG.md LICENSE "${PACKAGE}/"
           chmod 755 "${PACKAGE}"/*.command
 
           /usr/bin/ditto -c -k --keepParent "${PACKAGE}" "${PACKAGE}.zip"
