@@ -156,11 +156,12 @@ for f in MacDPI.command Install.command DPI_Ac.command DPI_Kapat.command Durum.c
 done
 
 if [ -f "$LAUNCHER_DIR/MacDPI.command" ]; then
-  cp -p "$LAUNCHER_DIR/MacDPI.command" "$HOME/Desktop/MacDPI.command"
-  chmod +x "$HOME/Desktop/MacDPI.command"
+  cp -p "$LAUNCHER_DIR/MacDPI.command" "$HOME/Desktop/MacDPI OneClick.command"
+  chmod +x "$HOME/Desktop/MacDPI OneClick.command"
 fi
 
-rm -f "$HOME/Desktop/DPI_Ac.command" \
+rm -f "$HOME/Desktop/MacDPI.command" \
+      "$HOME/Desktop/DPI_Ac.command" \
       "$HOME/Desktop/DPI_Kapat.command" \
       "$HOME/Desktop/Durum.command" \
       "$HOME/Desktop/Kaldir.command"
@@ -183,7 +184,8 @@ echo "DPI GLOBAL modda aktif."
 echo "Chrome, Safari, Edge, Discord ve diğer uygulamalar sistem genelinde kapsanır."
 echo "Mac yeniden başladığında servis otomatik başlayacaktır."
 echo
-echo "Masaüstüne tek kontrol dosyası bırakıldı: MacDPI.command"
+echo "Masaüstüne kısayol oluşturuldu: MacDPI OneClick.command"
+echo "Desktop shortcut created: MacDPI OneClick.command"
 echo
 
 osascript -e 'display notification "Global DPI bypass kuruldu ve aktif." with title "MacDPI OneClick"' >/dev/null 2>&1 || true
