@@ -1,6 +1,9 @@
 name: Build macOS Release
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -30,7 +33,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          VERSION="v1.3.0"
+          VERSION="v1.4.0"
           PACKAGE="MacDPI-OneClick-${VERSION}"
 
           rm -rf "${PACKAGE}" "${PACKAGE}.zip" verify
@@ -55,19 +58,19 @@ jobs:
 
           shasum -a 256 "${PACKAGE}.zip" > "${PACKAGE}.zip.sha256"
 
-      - name: Publish v1.3.0
+      - name: Publish v1.4.0
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          VERSION="v1.3.0"
+          VERSION="v1.4.0"
           ZIP="MacDPI-OneClick-${VERSION}.zip"
           SHA="${ZIP}.sha256"
-          NOTES="MacDPI OneClick v1.3.0 adds fail-safe network protection. It backs up the existing DHCP/manual IP and DNS configuration, checks for .240 address conflicts, pins MacDPI to reviewed commit 30556c5dd90d23819e32b4c2bfb8b8b670cde8a4, tests connectivity after enabling, and automatically restores the saved network configuration if activation fails. Disable and uninstall actions also restore the saved network settings. Includes bilingual beginner instructions and the Desktop Control Center."
+          NOTES="MacDPI OneClick v1.4.0 improves network safety for .240 address conflicts. If .240 is already occupied, the installer warns and continues cautiously instead of aborting immediately. Upstream MacDPI may continue without applying that static IP; MacDPI OneClick then verifies internet connectivity and automatically restores the saved DHCP/manual IP and DNS configuration if the connection is unhealthy. The release also keeps the v1.3 safety layer: network backup, automatic rollback, pinned MacDPI commit 30556c5dd90d23819e32b4c2bfb8b8b670cde8a4, local builds, bilingual beginner instructions and the Desktop Control Center."
 
           if gh release view "${VERSION}" >/dev/null 2>&1; then
             gh release upload "${VERSION}" "${ZIP}" "${SHA}" --clobber
           else
-            gh release create "${VERSION}" "${ZIP}" "${SHA}" --target "${GITHUB_SHA}" --title "MacDPI OneClick v1.3.0" --notes "${NOTES}"
+            gh release create "${VERSION}" "${ZIP}" "${SHA}" --target "${GITHUB_SHA}" --title "MacDPI OneClick v1.4.0" --notes "${NOTES}"
           fi
