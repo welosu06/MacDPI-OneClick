@@ -1,26 +1,25 @@
 #!/bin/bash
-set -e
+set -u
 
 ROOT="$HOME/.macdpi-oneclick"
 DIR="$ROOT/MacDPI"
 SAFETY="$ROOT/launcher/NetworkSafety.sh"
 
-if [ ! -d "$DIR" ]; then
-  echo "MacDPI OneClick kurulu değil / MacDPI OneClick is not installed."
-  read -r -p "Kapatmak için Enter'a bas / Press Enter to close..." _ || true
-  exit 0
+[ -f "$SAFETY" ] || { echo "NetworkSafety.sh bulunamadı / missing."; exit 1; }
+# shellcheck source=/dev/null
+source "$SAFETY"
+acquire_lock || exit 1
+trap 'release_lock >/dev/null 2>&1 || true' EXIT
+
+if [ -d "$DIR" ] && [ -f "$DIR/ServiceRemove.sh" ]; then
+  (cd "$DIR" && ./ServiceRemove.sh) || true
+else
+  sudo launchctl bootout system/com.macdpi >/dev/null 2>&1 || true
 fi
 
-cd "$DIR"
-/bin/bash ./ServiceRemove.sh || true
-
-if [ -f "$SAFETY" ]; then
-  # shellcheck source=/dev/null
-  source "$SAFETY"
-  restore_network "$ROOT/network-backup" || true
-fi
+restore_active_backup || true
+verify_restored_network || true
 
 echo
 echo "DPI KAPALI / DPI OFF"
-echo "Orijinal ağ ayarların geri yüklendi / Original network settings restored."
-sleep 2
+echo "Kayıtlı ağ ayarları geri yüklendi / Saved network settings restored."

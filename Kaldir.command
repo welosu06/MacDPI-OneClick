@@ -1,39 +1,52 @@
 #!/bin/bash
-set -e
+set -u
 
 ROOT="$HOME/.macdpi-oneclick"
 DIR="$ROOT/MacDPI"
 SAFETY="$ROOT/launcher/NetworkSafety.sh"
 
+[ -f "$SAFETY" ] && source "$SAFETY"
+
 clear
-echo "MacDPI OneClick kaldırılacak / MacDPI OneClick will be uninstalled."
-read -r -p "Devam edilsin mi? / Continue? [e/y = Yes, H/n = No] " ans
-case "${ans:-H}" in
-  e|E|y|Y) ;;
-  *) exit 0 ;;
-esac
+echo "MacDPI OneClick tamamen kaldırılacak / MacDPI OneClick will be fully removed."
+read -r -p "Devam? / Continue? [e/y = Yes, H/n = No] " ans
+case "${ans:-H}" in e|E|y|Y) ;; *) exit 0 ;; esac
 
-if [ -d "$DIR" ]; then
-  cd "$DIR"
-  ./ServiceRemove.sh || true
+acquire_lock || exit 1
+trap 'release_lock >/dev/null 2>&1 || true' EXIT
+
+if [ -d "$DIR" ] && [ -f "$DIR/ServiceRemove.sh" ]; then
+  (cd "$DIR" && ./ServiceRemove.sh) || true
+else
+  sudo launchctl bootout system/com.macdpi >/dev/null 2>&1 || true
 fi
 
-if [ -f "$SAFETY" ]; then
-  # shellcheck source=/dev/null
-  source "$SAFETY"
-  restore_network "$ROOT/network-backup" || true
+restore_active_backup || true
+verify_restored_network || true
+
+sudo launchctl bootout system/com.macdpi >/dev/null 2>&1 || true
+sudo rm -f /Library/LaunchDaemons/com.macdpi.plist >/dev/null 2>&1 || true
+
+if launchctl print system/com.macdpi >/dev/null 2>&1; then
+  echo "UYARI: launchd servisi hâlâ kayıtlı görünüyor / service may still be loaded."
+else
+  echo "Servis kalıntısı kontrolü: temiz / Service residue check: clean."
 fi
+
+release_lock
+trap - EXIT
 
 if [ -d "$ROOT" ]; then
-  mv "$ROOT" "$HOME/.Trash/macdpi-oneclick-$(date +%Y%m%d-%H%M%S)"
+  dest="$HOME/.Trash/macdpi-oneclick-$(date +%Y%m%d-%H%M%S)"
+  mv "$ROOT" "$dest"
 fi
 
-for f in "MacDPI OneClick.command" MacDPI.command DPI_Ac.command DPI_Kapat.command Kaldir.command Durum.command; do
+for f in "MacDPI OneClick.command" MacDPI.command DPI_Ac.command DPI_Kapat.command Kaldir.command Durum.command Agi_Kurtar.command Tani.command; do
   [ -e "$HOME/Desktop/$f" ] && mv "$HOME/Desktop/$f" "$HOME/.Trash/" || true
 done
 
 echo
-echo "MacDPI OneClick kaldırıldı / MacDPI OneClick was removed."
-echo "Orijinal ağ ayarları geri yüklendi / Original network settings were restored."
-echo "Homebrew, Go ve Xcode Command Line Tools kaldırılmadı / Homebrew, Go and Xcode Command Line Tools were kept."
-read -r -p "Kapatmak için Enter'a bas / Press Enter to close..." _ || true
+echo "MacDPI OneClick kaldırıldı / MacDPI OneClick removed."
+echo "Homebrew, Go ve Apple Command Line Tools sistemde bırakıldı."
+echo "Homebrew, Go and Apple Command Line Tools were left installed."
+read -r -p "Kapatmak için Enter / Press Enter to close..." _ || true

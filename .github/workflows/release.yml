@@ -1,6 +1,9 @@
 name: Build macOS Release
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -14,60 +17,99 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validate shell syntax
+      - name: Validate release source
         shell: bash
         run: |
           set -euo pipefail
-          bash -n MacDPI.command
-          bash -n Install.command
-          bash -n DPI_Ac.command
-          bash -n DPI_Kapat.command
-          bash -n Durum.command
-          bash -n Kaldir.command
-          bash -n NetworkSafety.sh
+          test "$(cat VERSION)" = "1.5.0"
+          /bin/bash -n MacDPI.command
+          /bin/bash -n Install.command
+          /bin/bash -n DPI_Ac.command
+          /bin/bash -n DPI_Kapat.command
+          /bin/bash -n Durum.command
+          /bin/bash -n Kaldir.command
+          /bin/bash -n Agi_Kurtar.command
+          /bin/bash -n Tani.command
+          /bin/bash -n NetworkSafety.sh
+          grep -q 'UPSTREAM_COMMIT="30556c5dd90d23819e32b4c2bfb8b8b670cde8a4"' Install.command
+          ! grep -R "1.5.0-beta\|Local test build" -- *.command *.sh README.md README_TR.md SECURITY.md CHANGELOG.md VERSION
 
       - name: Build Mac-friendly ZIP
         shell: bash
         run: |
           set -euo pipefail
-          VERSION="v1.4.0"
+          VERSION="v1.5.0"
           PACKAGE="MacDPI-OneClick-${VERSION}"
 
           rm -rf "${PACKAGE}" "${PACKAGE}.zip" verify
           mkdir -p "${PACKAGE}"
 
-          cp MacDPI.command Install.command DPI_Ac.command DPI_Kapat.command Durum.command Kaldir.command NetworkSafety.sh README.md README_TR.md SECURITY.md CHANGELOG.md LICENSE "${PACKAGE}/"
-          chmod 755 "${PACKAGE}"/*.command
+          cp \
+            VERSION \
+            MacDPI.command Install.command DPI_Ac.command DPI_Kapat.command \
+            Durum.command Kaldir.command Agi_Kurtar.command Tani.command \
+            NetworkSafety.sh README.md README_TR.md SECURITY.md CHANGELOG.md LICENSE \
+            "${PACKAGE}/"
+
+          chmod 755 "${PACKAGE}"/*.command "${PACKAGE}/NetworkSafety.sh"
+          chmod 644 "${PACKAGE}"/VERSION "${PACKAGE}"/*.md "${PACKAGE}"/LICENSE
 
           /usr/bin/ditto -c -k --keepParent "${PACKAGE}" "${PACKAGE}.zip"
 
           mkdir verify
           /usr/bin/ditto -x -k "${PACKAGE}.zip" verify
 
-          test -x "verify/${PACKAGE}/MacDPI.command"
-          test -x "verify/${PACKAGE}/Install.command"
-          test -x "verify/${PACKAGE}/DPI_Ac.command"
-          test -x "verify/${PACKAGE}/DPI_Kapat.command"
-          test -x "verify/${PACKAGE}/Durum.command"
-          test -x "verify/${PACKAGE}/Kaldir.command"
-          test -f "verify/${PACKAGE}/NetworkSafety.sh"
+          for f in MacDPI.command Install.command DPI_Ac.command DPI_Kapat.command Durum.command Kaldir.command Agi_Kurtar.command Tani.command NetworkSafety.sh; do
+            test -x "verify/${PACKAGE}/${f}"
+            /bin/bash -n "verify/${PACKAGE}/${f}"
+          done
+
+          test "$(cat "verify/${PACKAGE}/VERSION")" = "1.5.0"
+          test -f "verify/${PACKAGE}/README.md"
+          test -f "verify/${PACKAGE}/README_TR.md"
           test -f "verify/${PACKAGE}/SECURITY.md"
+          test -f "verify/${PACKAGE}/CHANGELOG.md"
 
           shasum -a 256 "${PACKAGE}.zip" > "${PACKAGE}.zip.sha256"
 
-      - name: Publish v1.4.0
+      - name: Publish v1.5.0
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          VERSION="v1.4.0"
+          VERSION="v1.5.0"
           ZIP="MacDPI-OneClick-${VERSION}.zip"
           SHA="${ZIP}.sha256"
-          NOTES="MacDPI OneClick v1.4.0 improves network safety for .240 address conflicts. If .240 is already occupied, the installer warns and continues cautiously instead of aborting immediately. Upstream MacDPI may continue without applying that static IP; MacDPI OneClick then verifies internet connectivity and automatically restores the saved DHCP/manual IP and DNS configuration if the connection is unhealthy. The release also keeps the v1.3 safety layer: network backup, automatic rollback, pinned MacDPI commit 30556c5dd90d23819e32b4c2bfb8b8b670cde8a4, local builds, bilingual beginner instructions and the Desktop Control Center."
+
+          cat > release-notes.md <<'NOTES'
+          MacDPI OneClick v1.5.0 is the largest safety and recovery update so far.
+
+          Highlights:
+          - creates a fresh clean-network backup before new DPI activations;
+          - imports the legacy v1.3/v1.4 backup format during upgrades;
+          - records DHCP/manual IP mode, IP, subnet mask, router and DNS for recovery;
+          - warns on an occupied .240 address without deliberately forcing it;
+          - runs connectivity health checks after activation and automatically rolls back on failure;
+          - verifies connectivity again after rollback;
+          - adds VPN/utun and captive-portal awareness;
+          - prevents accidental simultaneous network-changing operations with an operation lock;
+          - fixes Repair self-copy behavior;
+          - adds option 7: Emergency Restore Network;
+          - adds option 8: redacted diagnostics;
+          - improves uninstall residue checks;
+          - expands Gatekeeper instructions, including System Settings > Privacy & Security > Open Anyway;
+          - keeps MacDPI pinned to commit 30556c5dd90d23819e32b4c2bfb8b8b670cde8a4 and builds third-party components locally.
+
+          Security note: these protections reduce risk but cannot guarantee compatibility with every router, VPN, managed network, captive portal, ISP or future macOS version. See SECURITY.md for the complete model and limitations.
+          NOTES
 
           if gh release view "${VERSION}" >/dev/null 2>&1; then
             gh release upload "${VERSION}" "${ZIP}" "${SHA}" --clobber
+            gh release edit "${VERSION}" --title "MacDPI OneClick v1.5.0" --notes-file release-notes.md
           else
-            gh release create "${VERSION}" "${ZIP}" "${SHA}" --target "${GITHUB_SHA}" --title "MacDPI OneClick v1.4.0" --notes "${NOTES}"
+            gh release create "${VERSION}" "${ZIP}" "${SHA}" \
+              --target "${GITHUB_SHA}" \
+              --title "MacDPI OneClick v1.5.0" \
+              --notes-file release-notes.md
           fi

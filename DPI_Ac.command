@@ -6,60 +6,63 @@ DIR="$ROOT/MacDPI"
 LABEL="com.macdpi"
 SAFETY="$ROOT/launcher/NetworkSafety.sh"
 
+[ -f "$SAFETY" ] || { echo "NetworkSafety.sh bulunamadı / missing."; exit 1; }
+# shellcheck source=/dev/null
+source "$SAFETY"
+acquire_lock || exit 1
+trap 'release_lock >/dev/null 2>&1 || true' EXIT
+
 if [ ! -d "$DIR" ]; then
-  echo "MacDPI OneClick kurulu değil / MacDPI OneClick is not installed."
-  echo "Önce menüden 1'i seç / First choose option 1 from the menu."
-  read -r -p "Kapatmak için Enter'a bas / Press Enter to close..." _ || true
+  echo "MacDPI kurulu değil / MacDPI is not installed."
   exit 1
 fi
 
-if [ -f "$SAFETY" ]; then
-  # shellcheck source=/dev/null
-  source "$SAFETY"
+if service_loaded; then
+  echo "DPI zaten aktif / DPI is already active."
+  if internet_ok; then
+    echo "İnternet sağlık kontrolü: OK / Internet health: OK"
+    exit 0
+  fi
+  echo "Servis aktif görünüyor ancak internet testi başarısız."
+  echo "Service is loaded but the internet test failed."
+  echo "Güvenli yeniden başlatma uygulanacak / A safe restart will be attempted."
+  (cd "$DIR" && ./ServiceRemove.sh) || true
+  restore_active_backup || true
 fi
+
+backup_current_network || exit 1
+vpn_warning
+captive_portal_warning
+check_static_host_conflict
 
 cd "$DIR"
 sed -i '' 's/^MODE=.*/MODE=global/' settings.conf
 sed -i '' 's/^BLOCK_QUIC=.*/BLOCK_QUIC=true/' settings.conf
 sed -i '' 's/^MAX_CONN=.*/MAX_CONN=8192/' settings.conf
 
-if type check_static_host_conflict >/dev/null 2>&1; then
-  check_static_host_conflict || {
-    echo "DPI açılmadı / DPI was not enabled."
-    exit 1
-  }
-fi
-
 set +e
-if sudo launchctl print "system/$LABEL" >/dev/null 2>&1; then
-  ./ServiceRestart.sh
-  rc=$?
-else
-  ./ServiceInstall.sh
-  rc=$?
-fi
+./ServiceInstall.sh
+rc=$?
 set -e
 
 if [ "$rc" -ne 0 ]; then
   ./ServiceRemove.sh >/dev/null 2>&1 || true
-  if type restore_network >/dev/null 2>&1; then
-    restore_network "$ROOT/network-backup" || true
-  fi
-  echo "DPI başlatılamadı; ağ ayarları geri alındı / DPI could not start; network settings were restored."
+  restore_active_backup || true
+  verify_restored_network || true
+  echo "DPI başlatılamadı; ağ geri alındı / DPI could not start; network was restored."
   exit "$rc"
 fi
 
 sleep 4
-if type internet_ok >/dev/null 2>&1 && ! internet_ok; then
-  echo "Bağlantı testi başarısız; otomatik geri alma uygulanıyor."
-  echo "Connectivity test failed; automatic rollback is being applied."
+if ! internet_ok; then
+  echo "Bağlantı sağlık testi başarısız / Connectivity health check failed."
   ./ServiceRemove.sh >/dev/null 2>&1 || true
-  restore_network "$ROOT/network-backup" || true
+  restore_active_backup || true
+  verify_restored_network || true
   exit 1
 fi
 
 echo
 echo "DPI AKTİF / DPI ACTIVE — GLOBAL MODE"
-echo "Bağlantı kontrolü başarılı / Connectivity check passed."
-osascript -e 'display notification "DPI aktif — bağlantı kontrolü başarılı." with title "MacDPI OneClick"' >/dev/null 2>&1 || true
-sleep 2
+echo "İnternet sağlık kontrolü: OK / Internet health: OK"
+osascript -e 'display notification "DPI aktif — sağlık kontrolü başarılı." with title "MacDPI OneClick"' >/dev/null 2>&1 || true
