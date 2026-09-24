@@ -21,7 +21,7 @@ if [ -d "$ROOT" ]; then
   mv "$ROOT" "$HOME/.Trash/macdpi-oneclick-$(date +%Y%m%d-%H%M%S)"
 fi
 
-for f in MacDPI.command DPI_Ac.command DPI_Kapat.command Kaldir.command Durum.command; do
+for f in "MacDPI OneClick.command" MacDPI.command DPI_Ac.command DPI_Kapat.command Kaldir.command Durum.command; do
   [ -e "$HOME/Desktop/$f" ] && mv "$HOME/Desktop/$f" "$HOME/.Trash/" || true
 done
 
