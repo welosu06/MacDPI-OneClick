@@ -21,15 +21,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-
           VERSION="v1.0.0"
           PACKAGE="MacDPI-OneClick-${VERSION}"
 
           rm -rf "${PACKAGE}" "${PACKAGE}.zip" verify
           mkdir -p "${PACKAGE}"
 
-          cp             Install.command             DPI_Ac.command             DPI_Kapat.command             Durum.command             Kaldir.command             README.md             LICENSE             "${PACKAGE}/"
-
+          cp Install.command DPI_Ac.command DPI_Kapat.command Durum.command Kaldir.command README.md LICENSE "${PACKAGE}/"
           chmod 755 "${PACKAGE}"/*.command
 
           /usr/bin/ditto -c -k --keepParent "${PACKAGE}" "${PACKAGE}.zip"
@@ -51,21 +49,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-
           VERSION="v1.0.0"
           ZIP="MacDPI-OneClick-${VERSION}.zip"
           SHA="${ZIP}.sha256"
+          NOTES="First public release of MacDPI OneClick. Download MacDPI-OneClick-v1.0.0.zip, extract it, then open Install.command. The ZIP is built on macOS and verified to preserve executable permissions. Supports Apple Silicon M1-M5 and Intel Macs. macOS may require Right-click > Open on first launch because the project is not Apple-notarized."
 
           if gh release view "${VERSION}" >/dev/null 2>&1; then
             gh release upload "${VERSION}" "${ZIP}" "${SHA}" --clobber
           else
-            gh release create "${VERSION}"               "${ZIP}" "${SHA}"               --target "${GITHUB_SHA}"               --title "MacDPI OneClick v1.0.0"               --notes "First public release of MacDPI OneClick.
-
-Download **MacDPI-OneClick-v1.0.0.zip**, extract it, then open **Install.command**.
-
-The release ZIP is built on a macOS runner and verified to preserve executable permissions for every .command launcher.
-
-Supports Apple Silicon (M1–M5) and Intel Macs.
-
-Note: because this project is not Apple-notarized, macOS may require Right-click → Open on first launch."
+            gh release create "${VERSION}" "${ZIP}" "${SHA}" --target "${GITHUB_SHA}" --title "MacDPI OneClick v1.0.0" --notes "${NOTES}"
           fi
