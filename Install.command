@@ -63,7 +63,7 @@ echo "This tool temporarily changes network settings."
 echo
 echo "Güvenlik önlemleri / Safety protections:"
 echo "  • Mevcut IP ve DNS ayarlarını yedekler / Backs up current IP and DNS settings"
-echo "  • .240 IP çakışmasını önceden kontrol eder / Checks .240 IP conflict first"
+echo "  • .240 IP çakışmasını algılar ve güvenli şekilde yönetir / Detects and safely handles .240 IP conflicts"
 echo "  • Hata olursa ağı otomatik geri alır / Automatically rolls back on failure"
 echo "  • Kurulum sonrası interneti test eder / Tests internet after installation"
 echo "  • MacDPI kaynağını test edilmiş commit'e sabitler / Pins MacDPI to a tested commit"
