@@ -2,19 +2,20 @@
 
 macOS için sistem-geneli MacDPI kurulum ve kontrol paketi.
 
-## Çok Basit Kullanım / Very Simple Usage
+## Hiç Bilmeyen Biri İçin Kurulum / Beginner Setup
 
 1. GitHub'da **Releases** bölümünü aç / Open **Releases** on GitHub.
-2. **MacDPI-OneClick-v1.2.0.zip** dosyasını indir / Download **MacDPI-OneClick-v1.2.0.zip**.
+2. **MacDPI-OneClick-v1.3.0.zip** dosyasını indir / Download **MacDPI-OneClick-v1.3.0.zip**.
 3. ZIP dosyasını aç / Extract the ZIP.
 4. **MacDPI.command** dosyasına çift tıkla / Double-click **MacDPI.command**.
-5. İlk kez kullanıyorsan terminalde **1** yaz ve Enter'a bas / If this is your first time, type **1** and press Enter.
-6. Kurulum tamamlanınca Masaüstünde **MacDPI OneClick.command** oluşur / After installation, **MacDPI OneClick.command** appears on your Desktop.
-7. Bundan sonra sadece Masaüstündeki bu kısayolu aç / From then on, just open this Desktop shortcut.
+5. Mac uyarı verirse dosyaya sağ tık → **Aç / Open** → **Aç / Open**.
+6. İlk kez kullanıyorsan terminalde **1** yazıp Enter'a bas / First time: type **1** and press Enter.
+7. Kurulum tamamlanınca Masaüstünde **MacDPI OneClick.command** oluşur.
+8. Bundan sonra sadece Masaüstündeki bu kısayolu açman yeterli.
 
-macOS ilk açılışta uyarı verirse dosyaya sağ tıkla → **Aç** → **Aç** / If macOS blocks the first launch, right-click the file → **Open** → **Open**.
+Terminali kapatman DPI servisini kapatmaz. DPI'yi kapatmak ve normal ağ ayarlarına dönmek için Masaüstündeki kısayolu açıp **3** seç.
 
-## Terminal Menüsü / Terminal Menu
+## Menü / Menu
 
 - **1) MacDPI'yi Kur / Install MacDPI**
 - **2) DPI Bypass'ı Aç / Enable DPI Bypass**
@@ -24,17 +25,49 @@ macOS ilk açılışta uyarı verirse dosyaya sağ tıkla → **Aç** → **Aç*
 - **6) MacDPI'yi Tamamen Kaldır / Uninstall MacDPI Completely**
 - **0) Çıkış / Exit**
 
-İlk kez kullanıyorsan **1**. DPI'yi açmak için **2**. Normal internete dönmek için **3**.
+## Ağ Güvenliği / Network Safety
+
+MacDPI ağ ayarlarına dokunmadan önce mevcut ayarlar otomatik olarak yedeklenir:
+
+`~/.macdpi-oneclick/network-backup`
+
+Yedekte DHCP veya manuel ağ yapılandırması, IP adresi, subnet mask, router ve DNS bilgileri tutulur.
+
+Ek güvenlik önlemleri:
+
+- Global mod açılmadan önce `.240` IP çakışması kontrol edilir.
+- MacDPI, değişebilen `main` dalı yerine kontrol edilmiş `30556c5dd90d23819e32b4c2bfb8b8b670cde8a4` commit'ine sabitlenmiştir.
+- Üçüncü taraf hazır binary dağıtılmaz; bileşenler Mac üzerinde kaynak koddan derlenir.
+- Kurulumdan ve DPI'yi açtıktan sonra internet bağlantısı otomatik test edilir.
+- Bağlantı testi başarısız olursa servis kapatılır ve yedeklenen ağ ayarları otomatik geri yüklenir.
+- **3 - DPI'yi Kapat** seçeneği orijinal ağ ayarlarını geri yükler.
+- **6 - Tamamen Kaldır** seçeneği de kaldırmadan önce orijinal ağ ayarlarını geri yükler.
+
+Bu önlemler riski azaltır; ancak her modem, VPN, kurumsal ağ, captive portal ve ISS yapılandırmasında sıfır sorun garantisi verilemez.
+
+## Mac'te Neleri Değiştirir?
+
+DPI aktifken upstream MacDPI geçici olarak ağ yapılandırmasını değiştirebilir, `.240` ile biten bir LAN adresi kullanabilir, DNS'i değiştirebilir, QUIC/UDP 443'ü engelleyebilir ve `com.macdpi` isimli launchd servisini çalıştırabilir.
+
+Servis Mac açıldığında otomatik başlayabilir. Terminal penceresini kapatmak servisi durdurmaz.
+
+## Gizlilik / Privacy
+
+Wrapper scriptlerinde bilerek eklenmiş telemetry veya kullanıcı verisi toplama mekanizması yoktur. Proje kendi uzak VPN sunucusunu işletmez.
+
+Yönetici yetkisi ağ ayarları ve sistem servisi için gereklidir.
+
+## Sorun Olursa / If Something Goes Wrong
+
+Önce Masaüstündeki **MacDPI OneClick.command** dosyasını açıp **3** seç. Bu servis kapatma ve kayıtlı ağ ayarlarını geri yükleme işlemini çalıştırır.
+
+Tamamen kaldırmak için **6** seç.
+
+Daha fazla güvenlik bilgisi için [SECURITY.md](SECURITY.md).
 
 ## Destek / Support
 
-Apple Silicon M1–M5 ve Intel Mac'ler / Apple Silicon M1–M5 and Intel Macs.
-
-## Şeffaflık / Transparency
-
-Bu repo üçüncü taraf hazır binary dağıtmaz. MacDPI, sing-box ve ByeDPI bileşenleri upstream kaynaklardan alınır ve yerel olarak derlenir.
-
-This repository does not bundle third-party binaries. MacDPI, sing-box and ByeDPI are obtained from upstream sources and built locally.
+Apple Silicon M1–M5 ve Intel Mac'ler.
 
 ## Lisans / License
 
