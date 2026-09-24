@@ -44,7 +44,7 @@ MacDPI OneClick does not bundle prebuilt copies of ByeDPI/ciadpi or sing-box. Up
 
 ## Known networking considerations
 
-Global mode may temporarily use a LAN address ending in `.240`. MacDPI OneClick performs a pre-check for an obvious address conflict before starting the service, but no LAN conflict detection method is perfect.
+Global mode may temporarily use a LAN address ending in `.240`. MacDPI OneClick performs a pre-check before starting the service. If that address appears occupied, the wrapper does not treat the condition as an automatic hard failure. Upstream MacDPI may continue without applying the static address; MacDPI OneClick then performs a connectivity test. If connectivity is not healthy, the service is stopped and the saved network configuration is restored automatically. This is safer than forcing the static address, while still allowing networks where global mode works correctly without it. No LAN conflict detection method is perfect.
 
 Compatibility can also vary with:
 
