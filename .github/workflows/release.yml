@@ -1,0 +1,71 @@
+name: Build macOS Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Mac-friendly ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          VERSION="v1.0.0"
+          PACKAGE="MacDPI-OneClick-${VERSION}"
+
+          rm -rf "${PACKAGE}" "${PACKAGE}.zip" verify
+          mkdir -p "${PACKAGE}"
+
+          cp             Install.command             DPI_Ac.command             DPI_Kapat.command             Durum.command             Kaldir.command             README.md             LICENSE             "${PACKAGE}/"
+
+          chmod 755 "${PACKAGE}"/*.command
+
+          /usr/bin/ditto -c -k --keepParent "${PACKAGE}" "${PACKAGE}.zip"
+
+          mkdir verify
+          /usr/bin/ditto -x -k "${PACKAGE}.zip" verify
+
+          test -x "verify/${PACKAGE}/Install.command"
+          test -x "verify/${PACKAGE}/DPI_Ac.command"
+          test -x "verify/${PACKAGE}/DPI_Kapat.command"
+          test -x "verify/${PACKAGE}/Durum.command"
+          test -x "verify/${PACKAGE}/Kaldir.command"
+
+          shasum -a 256 "${PACKAGE}.zip" > "${PACKAGE}.zip.sha256"
+
+      - name: Publish v1.0.0
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          VERSION="v1.0.0"
+          ZIP="MacDPI-OneClick-${VERSION}.zip"
+          SHA="${ZIP}.sha256"
+
+          if gh release view "${VERSION}" >/dev/null 2>&1; then
+            gh release upload "${VERSION}" "${ZIP}" "${SHA}" --clobber
+          else
+            gh release create "${VERSION}"               "${ZIP}" "${SHA}"               --target "${GITHUB_SHA}"               --title "MacDPI OneClick v1.0.0"               --notes "First public release of MacDPI OneClick.
+
+Download **MacDPI-OneClick-v1.0.0.zip**, extract it, then open **Install.command**.
+
+The release ZIP is built on a macOS runner and verified to preserve executable permissions for every .command launcher.
+
+Supports Apple Silicon (M1–M5) and Intel Macs.
+
+Note: because this project is not Apple-notarized, macOS may require Right-click → Open on first launch."
+          fi
