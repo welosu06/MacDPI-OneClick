@@ -144,13 +144,26 @@ echo "[6/6] Açılış servisi kuruluyor..."
 PATH="$GO_PREFIX/bin:$PATH" ./ServiceInstall.sh
 
 echo
-echo "Masaüstüne Aç/Kapat/Kaldır kısayolları kopyalanıyor..."
-for f in DPI_Ac.command DPI_Kapat.command Kaldir.command Durum.command; do
+echo "Tek terminal kontrol merkezi hazırlanıyor..."
+LAUNCHER_DIR="$INSTALL_ROOT/launcher"
+mkdir -p "$LAUNCHER_DIR"
+
+for f in MacDPI.command Install.command DPI_Ac.command DPI_Kapat.command Durum.command Kaldir.command; do
   if [ -f "$SELF_DIR/$f" ]; then
-    cp -p "$SELF_DIR/$f" "$HOME/Desktop/$f"
-    chmod +x "$HOME/Desktop/$f"
+    cp -p "$SELF_DIR/$f" "$LAUNCHER_DIR/$f"
+    chmod +x "$LAUNCHER_DIR/$f"
   fi
 done
+
+if [ -f "$LAUNCHER_DIR/MacDPI.command" ]; then
+  cp -p "$LAUNCHER_DIR/MacDPI.command" "$HOME/Desktop/MacDPI.command"
+  chmod +x "$HOME/Desktop/MacDPI.command"
+fi
+
+rm -f "$HOME/Desktop/DPI_Ac.command" \
+      "$HOME/Desktop/DPI_Kapat.command" \
+      "$HOME/Desktop/Durum.command" \
+      "$HOME/Desktop/Kaldir.command"
 
 mkdir -p "$INSTALL_ROOT"
 cat > "$INSTALL_ROOT/install-info.txt" <<EOF
@@ -170,7 +183,7 @@ echo "DPI GLOBAL modda aktif."
 echo "Chrome, Safari, Edge, Discord ve diğer uygulamalar sistem genelinde kapsanır."
 echo "Mac yeniden başladığında servis otomatik başlayacaktır."
 echo
-echo "Masaüstüne DPI_Ac.command ve DPI_Kapat.command kısayolları bırakıldı."
+echo "Masaüstüne tek kontrol dosyası bırakıldı: MacDPI.command"
 echo
 
 osascript -e 'display notification "Global DPI bypass kuruldu ve aktif." with title "MacDPI OneClick"' >/dev/null 2>&1 || true
