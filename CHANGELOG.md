@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.6.0 — 2026-10-25
+
+- Fix the reproduced Discord desktop update failure using gVisor, physical-interface-bound ByeDPI sockets and `--split 2`.
+- Ship auditable source patches, applied on every installation/repair; pin the full ByeDPI revision.
+- Keep the current IP configuration by default instead of selecting `.240`.
+- Add a separate SecureTransport-based Discord updater health check without disabling certificate verification.
+- Prefer the extracted release's own installer when upgrading an existing installation.
+- Release an installer's own lock before waiting on a fatal error; never delete another operation's lock.
+- Add clean-source patch/build, socket-binding, upgrade-selection, idempotence and lock-ownership regression checks.
+- Generalize the release workflow to package VERSION, include patches, verify ZIP permissions, and publish when VERSION changes on main.
+
 ## v1.5.0
 
 v1.5.0 is the largest safety/recovery update so far. It changes the wrapper from a simple installer/menu into a more defensive network-control layer around MacDPI.

@@ -17,9 +17,15 @@ if [ ! -d "$DIR" ]; then
   exit 1
 fi
 
+if [ "$(cat "$DIR/oneclick-runtime-version" 2>/dev/null || true)" != "1.6.0" ]; then
+  echo "Önce yeni paketten 1 — Kurulum seç / Run option 1 from the new package first."
+  exit 1
+fi
+
 if service_loaded; then
   echo "DPI zaten aktif / DPI is already active."
   if internet_ok; then
+    report_discord_health || true
     echo "İnternet sağlık kontrolü: OK / Internet health: OK"
     exit 0
   fi
@@ -33,7 +39,6 @@ fi
 backup_current_network || exit 1
 vpn_warning
 captive_portal_warning
-check_static_host_conflict
 
 cd "$DIR"
 sed -i '' 's/^MODE=.*/MODE=global/' settings.conf
@@ -54,7 +59,7 @@ if [ "$rc" -ne 0 ]; then
 fi
 
 sleep 4
-if ! internet_ok; then
+if ! wait_for_internet; then
   echo "Bağlantı sağlık testi başarısız / Connectivity health check failed."
   ./ServiceRemove.sh >/dev/null 2>&1 || true
   restore_active_backup || true
@@ -65,4 +70,5 @@ fi
 echo
 echo "DPI AKTİF / DPI ACTIVE — GLOBAL MODE"
 echo "İnternet sağlık kontrolü: OK / Internet health: OK"
+report_discord_health || true
 osascript -e 'display notification "DPI aktif — sağlık kontrolü başarılı." with title "MacDPI OneClick"' >/dev/null 2>&1 || true

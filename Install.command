@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-VERSION="1.5.0"
+VERSION="1.6.0"
 ROOT="$HOME/.macdpi-oneclick"
 UPSTREAM_DIR="$ROOT/MacDPI"
 UPSTREAM_URL="https://github.com/monotter/MacDPI.git"
@@ -19,6 +19,7 @@ pause_exit() {
 die() {
   echo
   echo "HATA / ERROR: $*"
+  if declare -F release_lock >/dev/null; then release_lock || true; fi
   pause_exit
   exit 1
 }
@@ -66,8 +67,8 @@ echo
 echo "Güvenlik / Safety:"
 echo "  • Her etkinleştirmeden önce güncel ağ yapılandırması yedeklenir."
 echo "    The current network configuration is backed up before activation."
-echo "  • .240 çakışması zorlanmaz; bağlantı sağlık testi yapılır."
-echo "    A .240 conflict is never forced; connectivity is health-checked."
+echo "  • Mevcut IP ayarı korunur; bağlantı sağlık testi yapılır."
+echo "    The existing IP configuration is kept; connectivity is health-checked."
 echo "  • Hata olursa servis durdurulur ve kayıtlı ağ ayarları geri yüklenir."
 echo "    On failure, the service is stopped and saved network settings are restored."
 echo "  • Yönetici parolası scriptler tarafından kaydedilmez."
@@ -78,6 +79,7 @@ echo
 
 [ "$(uname -s)" = "Darwin" ] || die "Bu paket yalnızca macOS içindir / macOS only."
 [ -f "$SAFETY_FILE" ] || die "NetworkSafety.sh bulunamadı / NetworkSafety.sh is missing."
+[ -f "$SELF_DIR/ApplyFixes.sh" ] && [ -d "$SELF_DIR/patches" ] || die "Düzeltme dosyaları eksik / Patch files are missing."
 
 # shellcheck source=/dev/null
 source "$SAFETY_FILE"
@@ -166,7 +168,6 @@ echo "[5/9] Güncel ağ ayarları yedekleniyor / Backing up current network sett
 backup_current_network
 vpn_warning
 captive_portal_warning
-check_static_host_conflict
 
 echo
 echo "[6/9] Sabitlenmiş upstream kaynak hazırlanıyor / Preparing pinned upstream source..."
@@ -187,6 +188,8 @@ cd "$UPSTREAM_DIR"
 ACTUAL_COMMIT="$(git rev-parse HEAD)"
 [ "$ACTUAL_COMMIT" = "$UPSTREAM_COMMIT" ] || die "Upstream commit doğrulanamadı / Upstream commit verification failed."
 
+/bin/bash "$SELF_DIR/ApplyFixes.sh" "$UPSTREAM_DIR"
+
 sed -i '' 's/^MODE=.*/MODE=global/' settings.conf
 sed -i '' 's/^BLOCK_QUIC=.*/BLOCK_QUIC=true/' settings.conf
 sed -i '' 's/^MAX_CONN=.*/MAX_CONN=8192/' settings.conf
@@ -206,7 +209,7 @@ NETWORK_CHANGED=1
 PATH="$GO_PREFIX/bin:$PATH" ./ServiceInstall.sh
 
 sleep 4
-if ! internet_ok; then
+if ! wait_for_internet; then
   echo "Bağlantı testi başarısız / Connectivity test failed."
   ./ServiceRemove.sh || true
   restore_active_backup || true
@@ -215,19 +218,22 @@ if ! internet_ok; then
   die "Kurulum güvenli şekilde geri alındı / Installation was safely rolled back."
 fi
 echo "Bağlantı testi başarılı / Connectivity test passed."
+report_discord_health || true
 
 echo
 echo "[9/9] Kontrol merkezi hazırlanıyor / Preparing Control Center..."
 LAUNCHER_DIR="$ROOT/launcher"
 mkdir -p "$LAUNCHER_DIR"
 
-HELPERS="MacDPI.command Install.command DPI_Ac.command DPI_Kapat.command Durum.command Kaldir.command Agi_Kurtar.command Tani.command NetworkSafety.sh VERSION"
+HELPERS="MacDPI.command Install.command DPI_Ac.command DPI_Kapat.command Durum.command Kaldir.command Agi_Kurtar.command Tani.command NetworkSafety.sh ApplyFixes.sh VERSION"
 if [ "$SELF_DIR" != "$LAUNCHER_DIR" ]; then
   for f in $HELPERS; do
     if [ -f "$SELF_DIR/$f" ]; then
       cp -p "$SELF_DIR/$f" "$LAUNCHER_DIR/$f"
     fi
   done
+  mkdir -p "$LAUNCHER_DIR/patches"
+  cp -p "$SELF_DIR"/patches/*.patch "$LAUNCHER_DIR/patches/"
 else
   echo "Onarım mevcut launcher üzerinden çalışıyor; kendi üzerine kopyalama atlandı."
   echo "Repair is running from the installed launcher; self-copy was skipped."
@@ -247,6 +253,8 @@ Architecture: $ARCH
 Upstream: $UPSTREAM_URL
 Pinned MacDPI commit: $UPSTREAM_COMMIT
 Mode: global
+Runtime fixes: 1.6.0 (gVisor, interface binding, split 2)
+Static IP: disabled by default
 Go: $("$GO_BIN" version)
 EOF
 

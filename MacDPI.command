@@ -1,11 +1,14 @@
 #!/bin/bash
 
-VERSION="1.5.0"
+VERSION="1.6.0"
 ROOT="$HOME/.macdpi-oneclick"
 INSTALLED_LAUNCHER="$ROOT/launcher"
 SELF_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-if [ -d "$INSTALLED_LAUNCHER" ] && [ -f "$INSTALLED_LAUNCHER/Install.command" ]; then
+if [ -f "$SELF_DIR/Install.command" ] && [ -f "$SELF_DIR/VERSION" ]; then
+  SCRIPT_DIR="$SELF_DIR"
+  VERSION="$(cat "$SCRIPT_DIR/VERSION")"
+elif [ -d "$INSTALLED_LAUNCHER" ] && [ -f "$INSTALLED_LAUNCHER/Install.command" ]; then
   SCRIPT_DIR="$INSTALLED_LAUNCHER"
   [ -f "$SCRIPT_DIR/VERSION" ] && VERSION="$(cat "$SCRIPT_DIR/VERSION")"
 else

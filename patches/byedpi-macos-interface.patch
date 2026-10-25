@@ -1,0 +1,35 @@
+diff --git a/proxy.c b/proxy.c
+index 5b96d3c..3ae7b35 100644
+--- a/proxy.c
++++ b/proxy.c
+@@ -6,6 +6,9 @@
+ #include <string.h>
+ #include <signal.h>
+ #include <assert.h>
++#ifdef __APPLE__
++#include <net/if.h>
++#endif
+ 
+ #include "params.h"
+ #include "conev.h"
+@@ -397,6 +400,20 @@ static int remote_sock(union sockaddr_u *dst, int type)
+         uniperror("socket");  
+         return -1;
+     }
++#ifdef __APPLE__
++    /* Keep desynchronized packets out of the userspace TUN TCP stack. */
++    const char *physical_iface = getenv("MACDPI_BIND_INTERFACE");
++    if (physical_iface && *physical_iface) {
++        unsigned int idx = if_nametoindex(physical_iface);
++        int level = dst->sa.sa_family == AF_INET6 ? IPPROTO_IPV6 : IPPROTO_IP;
++        int option = dst->sa.sa_family == AF_INET6 ? IPV6_BOUND_IF : IP_BOUND_IF;
++        if (!idx || setsockopt(sfd, level, option, &idx, sizeof(idx)) < 0) {
++            uniperror("bind physical interface");
++            close(sfd);
++            return -1;
++        }
++    }
++#endif
+     if (socket_mod(sfd) < 0) {
+         close(sfd);
+         return -1;

@@ -16,12 +16,13 @@ OUT="$HOME/Desktop/MacDPI-Diagnostics-$(date +%Y%m%d-%H%M%S).txt"
   echo "Architecture: $(uname -m)"
   echo "Service loaded: $(launchctl print system/com.macdpi >/dev/null 2>&1 && echo yes || echo no)"
   echo "Internet health: $(internet_ok >/dev/null 2>&1 && echo OK || echo NOT_VERIFIED)"
+  report_discord_health || true
   echo "Active interface: $(default_interface 2>/dev/null || echo unknown)"
   echo "Network service: $(active_network_service 2>/dev/null || echo unknown)"
   if [ -f "$DIR/settings.conf" ]; then
     echo
     echo "[settings]"
-    grep -E '^(MODE|BLOCK_QUIC|MAX_CONN|DOH_SERVER)=' "$DIR/settings.conf" || true
+    grep -E '^(MODE|BLOCK_QUIC|MAX_CONN|DOH_SERVER|CIADPI_ARGS)=' "$DIR/settings.conf" || true
   fi
   if [ -f "$ROOT/install-info.txt" ]; then
     echo

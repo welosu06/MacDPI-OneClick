@@ -1,6 +1,6 @@
 # Security
 
-MacDPI OneClick changes system networking and installs/removes a system launch daemon. The v1.5.0 safety design therefore focuses on **recovery, reproducibility and transparency** rather than claiming that network modification is risk-free.
+MacDPI OneClick changes system networking and installs/removes a system launch daemon. The v1.6.0 safety design therefore focuses on **recovery, reproducibility and transparency** rather than claiming that network modification is risk-free.
 
 ## Security objective
 
@@ -44,13 +44,13 @@ When activation or a post-start connectivity test fails, the wrapper attempts to
 
 Rollback is a best-effort safety mechanism, not a formal transactional guarantee. macOS, a VPN client, MDM software or another network process can change settings concurrently.
 
-## `.240` address handling
+## IP configuration and physical-interface binding
 
-Upstream MacDPI can attempt to configure a LAN host address ending in `.240`. The wrapper probes the candidate before activation.
+v1.6.0 keeps the current DHCP/manual IP configuration by default. The patched runtime only invokes the upstream static-IP helper if an operator explicitly sets `MACDPI_USE_STATIC_IP=1`; this is not enabled by the installer or launch daemon.
 
-If it appears occupied, the wrapper does not deliberately force that address. It warns the user and relies on upstream MacDPI's behavior plus the post-start connectivity health check. If health is not acceptable, rollback is triggered.
+The locally compiled ByeDPI patch binds outbound sockets to the selected physical interface with macOS socket options. An invalid interface is an error. The launcher rejects a `utun` default interface to avoid silently recirculating bypass traffic through another tunnel. Switching networks may require disabling and re-enabling the service.
 
-ICMP/ping-based conflict detection is not perfect: a device can ignore ping, and some networks filter ICMP. The health-check/rollback layer therefore remains necessary even after a successful pre-check.
+The default strategy uses IPv4 sockets. IPv6-only networks and VPN default routes need separate validation. TUN uses gVisor; DNS is redirected through HTTPS while active. All reachability checks keep TLS certificate validation enabled. A generic internet health result and the Discord updater health result are reported separately; the latter is not proof of voice/UDP connectivity.
 
 ## Emergency recovery
 
@@ -60,7 +60,7 @@ If no usable backup exists, the user can explicitly choose a last-resort DHCP + 
 
 ## Concurrent operation protection
 
-Network-changing actions use a lock directory containing the running process ID. This reduces accidental concurrent install/enable/disable/recovery operations. A stale lock can be replaced when the recorded process no longer exists.
+Network-changing actions use a lock directory containing the running process ID. This reduces accidental concurrent install/enable/disable/recovery operations. A stale lock can be replaced when the recorded process no longer exists. Fatal installer errors release their own lock before waiting for Enter; release never removes another process's lock.
 
 This is a local coordination mechanism, not protection against unrelated third-party software changing the network at the same time.
 
@@ -86,7 +86,7 @@ The wrapper pins MacDPI to:
 
 `30556c5dd90d23819e32b4c2bfb8b8b670cde8a4`
 
-That pinned MacDPI build process currently pins/uses ByeDPI ref `ba53229` and sing-box `v1.13.14`.
+The v1.6.0 build patch pins ByeDPI to full commit `ba532298de7b28cfe854aea83d061369d13ca290` and keeps sing-box `v1.13.14`. `patches/` contains the runtime and socket-binding diffs; `ApplyFixes.sh` validates the upstream revision and patch applicability before applying them. The build applies the ByeDPI patch before compilation. Repair retains these patches in the installed launcher directory.
 
 Third-party binaries are built locally rather than bundled in the MacDPI OneClick release ZIP. Pinning prevents the wrapper release from silently following future MacDPI `main` changes, but the pinned MacDPI commit is not GPG-verified on GitHub; pinning is reproducibility, not cryptographic publisher authentication.
 

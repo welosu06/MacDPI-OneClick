@@ -17,7 +17,7 @@ if [ -d "$DIR" ]; then
   echo "Kurulum / Installation: VAR / PRESENT"
   if [ -f "$DIR/settings.conf" ]; then
     echo "Yapılandırma / Configuration:"
-    grep -E '^(MODE|BLOCK_QUIC|MAX_CONN|DOH_SERVER)=' "$DIR/settings.conf" || true
+    grep -E '^(MODE|BLOCK_QUIC|MAX_CONN|DOH_SERVER|CIADPI_ARGS)=' "$DIR/settings.conf" || true
   fi
 else
   echo "Kurulum / Installation: YOK / NOT INSTALLED"
@@ -35,6 +35,8 @@ if type internet_ok >/dev/null 2>&1 && internet_ok; then
 else
   echo "İnternet / Internet: DOĞRULANAMADI / NOT VERIFIED"
 fi
+
+if type report_discord_health >/dev/null 2>&1; then report_discord_health || true; fi
 
 echo "Aktif arayüz / Active interface: $(default_interface 2>/dev/null || echo unknown)"
 echo "Ağ servisi / Network service: $(active_network_service 2>/dev/null || echo unknown)"

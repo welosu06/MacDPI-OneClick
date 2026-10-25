@@ -1,0 +1,93 @@
+diff --git a/Run.sh b/Run.sh
+index c5735f4..3a6ec48 100755
+--- a/Run.sh
++++ b/Run.sh
+@@ -84,7 +84,7 @@ cleanup() {
+         sudo -n kill -KILL -"$box_pid" 2>/dev/null
+     fi
+ 
+-    ./net/UnsetStaticIP.sh
++    if [ "${MACDPI_USE_STATIC_IP:-0}" = "1" ]; then ./net/UnsetStaticIP.sh; fi
+ 
+     echo "Stopped."
+ }
+@@ -94,7 +94,10 @@ trap cleanup INT TERM EXIT
+ ./core/RunDPI.sh &
+ dpi_pid=$!
+ 
+-./net/SetStaticIP.sh || echo "Static IP not set; bypass still works but disconnects may occur."
++# gVisor repair keeps the current IP configuration.
++if [ "${MACDPI_USE_STATIC_IP:-0}" = "1" ]; then
++    ./net/SetStaticIP.sh || echo "Static IP not set; bypass still works but disconnects may occur."
++fi
+ 
+ sudo networksetup -setdnsservers "$net_svc" 1.1.1.1
+ sudo dscacheutil -flushcache 2>/dev/null; sudo killall -HUP mDNSResponder 2>/dev/null
+diff --git a/ServiceRemove.sh b/ServiceRemove.sh
+index 22e80ab..3722277 100755
+--- a/ServiceRemove.sh
++++ b/ServiceRemove.sh
+@@ -7,6 +7,6 @@ PLIST="/Library/LaunchDaemons/$LABEL.plist"
+ 
+ sudo launchctl bootout system/"$LABEL" 2>/dev/null || true
+ sudo rm -f "$PLIST"
+-./net/UnsetStaticIP.sh 2>/dev/null || true
++if [ "${MACDPI_USE_STATIC_IP:-0}" = "1" ]; then ./net/UnsetStaticIP.sh 2>/dev/null || true; fi
+ 
+ echo "Service removed."
+diff --git a/bin/Build.sh b/bin/Build.sh
+index 5f64ce3..5fb6912 100755
+--- a/bin/Build.sh
++++ b/bin/Build.sh
+@@ -5,7 +5,7 @@ set -e
+ cd "$(dirname "$0")/.."
+ 
+ SINGBOX_TAG="v1.13.14"
+-BYEDPI_REF="ba53229"
++BYEDPI_REF="ba532298de7b28cfe854aea83d061369d13ca290"
+ 
+ BYEDPI_DIR=".build-byedpi"
+ SINGBOX_DIR=".build-singbox"
+@@ -67,6 +67,11 @@ echo "Building byedpi ($BYEDPI_REF)..."
+ rm -rf "$BYEDPI_DIR"
+ git clone --quiet https://github.com/hufrea/byedpi.git "$BYEDPI_DIR"
+ git -c advice.detachedHead=false -C "$BYEDPI_DIR" checkout --quiet "$BYEDPI_REF"
++[ "$(git -C "$BYEDPI_DIR" rev-parse HEAD)" = "$BYEDPI_REF" ] || exit 1
++PATCH_FILE="$(pwd)/bin/byedpi-macos-interface.patch"
++[ -f "$PATCH_FILE" ] || { echo "OneClick interface patch missing" >&2; exit 1; }
++git -C "$BYEDPI_DIR" apply --check "$PATCH_FILE"
++git -C "$BYEDPI_DIR" apply "$PATCH_FILE"
+ if ! make -C "$BYEDPI_DIR" >"$BUILD_LOG" 2>&1; then cat "$BUILD_LOG"; exit 1; fi
+ cp "$BYEDPI_DIR/ciadpi" ./bin/ciadpi
+ 
+diff --git a/core/GenConfig.sh b/core/GenConfig.sh
+index 82eb68a..3ae9c8a 100755
+--- a/core/GenConfig.sh
++++ b/core/GenConfig.sh
+@@ -141,7 +141,8 @@ json=$(cat <<EOF
+         "172.19.0.1/30"
+       ],
+       "auto_route": true,
+-      "strict_route": false
++      "strict_route": false,
++      "stack": "gvisor"
+     }
+   ],
+   "outbounds": [
+diff --git a/core/RunDPI.sh b/core/RunDPI.sh
+index c71f23b..729f81f 100755
+--- a/core/RunDPI.sh
++++ b/core/RunDPI.sh
+@@ -7,6 +7,12 @@ CIADPI_ARGS=""
+ MAX_CONN=512
+ [ -f settings.conf ] && . ./settings.conf
+ 
++# Bypass the TUN for desynchronized outbound packets on macOS.
++MACDPI_BIND_INTERFACE="$(/sbin/route -n get default 2>/dev/null | /usr/bin/awk '/interface:/{print $2; exit}')"
++[ -n "$MACDPI_BIND_INTERFACE" ] || { echo "No physical interface found" >&2; exit 1; }
++case "$MACDPI_BIND_INTERFACE" in utun*) echo "Default interface is a tunnel; refusing to loop" >&2; exit 1 ;; esac
++export MACDPI_BIND_INTERFACE
++
+ # Each connection uses ~2 fds; make sure the fd limit clears the pool size. Run.sh
+ # already raises this, but do it here too so a standalone run isn't fd-starved.
+ ulimit -n $(( MAX_CONN * 4 )) 2>/dev/null || true

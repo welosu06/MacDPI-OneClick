@@ -66,6 +66,8 @@ acquire_lock() {
 }
 
 release_lock() {
+  # Never release a lock belonging to another installer.
+  [ "$(cat "$LOCK_DIR/pid" 2>/dev/null || true)" = "$$" ] || return 0
   rm -rf "$LOCK_DIR" 2>/dev/null || true
 }
 
@@ -264,6 +266,36 @@ internet_ok() {
       return 0
     fi
   done
+  return 1
+}
+
+wait_for_internet() {
+  local attempt
+  for attempt in 1 2 3; do
+    if internet_ok; then return 0; fi
+    sleep 2
+  done
+  return 1
+}
+
+report_discord_health() {
+  local arch platform error_file status
+  case "$(uname -m)" in arm64) arch=arm64 ;; *) arch=x64 ;; esac
+  platform="$(sw_vers -productVersion 2>/dev/null || echo 0)"
+  error_file="$(mktemp)" || return 1
+  # Match the native macOS TLS backend used by the desktop updater.
+  # Keep certificate verification enabled; generic web health is not enough.
+  if status=$(CURL_SSL_BACKEND=secure-transport /usr/bin/curl -fsS \
+    --connect-timeout 5 --max-time 12 -o /dev/null -w '%{http_code}' \
+    "https://updates.discord.com/distributions/app/manifests/latest?channel=stable&platform=osx&arch=$arch&platform_version=$platform" 2>"$error_file") \
+    && [ "$status" = 200 ]; then
+    echo "Discord güncelleme erişimi / Discord updater HTTPS: OK"
+    rm -f "$error_file"
+    return 0
+  fi
+  echo "Discord güncelleme erişimi / Discord updater HTTPS: DOĞRULANAMADI / NOT VERIFIED"
+  sanitize_stream < "$error_file"
+  rm -f "$error_file"
   return 1
 }
 
