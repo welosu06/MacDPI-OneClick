@@ -1,21 +1,46 @@
-# MacDPI OneClick v1.6.0
+# MacDPI — Kolay kurulum (v1.6.1)
 
-macOS için Türkçe/İngilizce kurulum, açma-kapatma ve ağ kurtarma menüsü.
+**Sadece Mac içindir. Windows paketinden ayrıdır.**
 
-**v1.6.0, Discord uygulamasında görülen “Update Failed / Retrying” sorunu için doğrulanan düzeltmeleri içerir.** gVisor TUN, fiziksel ağ arayüzüne bağlanan yerel ByeDPI derlemesi ve `--split 2` birlikte kullanılır. Kurulum ve Onar seçenekleri bu düzeltmeleri yeniden uygular.
+## İlk kez kuruyorsan veya eski sürümü güncelliyorsan
 
-## Kurulum ve yükseltme
+1. [MacDPI-OneClick-v1.6.1.zip dosyasını indir](https://github.com/welosu06/MacDPI-OneClick/releases/download/v1.6.1/MacDPI-OneClick-v1.6.1.zip).
+2. **İndirilenler** klasörünü aç. ZIP dosyasına **iki kez tıkla**. Bir klasör çıkacak.
+3. Çıkan **MacDPI-OneClick-v1.6.1** klasörünü aç.
+4. İçindeki **MacDPI.command** dosyasını aç. Terminal penceresinin açılması normaldir.
+5. Menüde **1** yaz ve **Enter** tuşuna bas. Eski sürümün olsa da güncellemek için **1** seç.
+6. Mac giriş şifren istenirse yaz ve **Enter** tuşuna bas. **Yazarken ekranda harf veya yıldız görünmez; bu normaldir.**
+7. Kurulum bitene kadar pencereyi kapatma. İlk kurulum internet hızına göre birkaç dakika sürebilir.
+8. Kurulum başarılı olduğunda Discord'u tamamen kapatıp yeniden aç.
 
-1. [Son sürümü aç](https://github.com/welosu06/MacDPI-OneClick/releases/latest).
-2. **Assets** bölümünden **MacDPI-OneClick-v1.6.0.zip** indir ve ZIP'i aç.
-3. Yeni klasördeki **MacDPI.command** dosyasını aç; **1 — Güvenli Kurulum** seç.
-4. macOS engellerse **sağ tık → Aç** yolunu dene. Gerekirse **Sistem Ayarları → Gizlilik ve Güvenlik → Yine de Aç** seçeneğini kullan.
-5. Yönetici parolanı yalnızca normal macOS/sudo istemine gir. Yerel derleme birkaç dakika sürebilir.
-6. Sonraki kullanımlarda Masaüstündeki **MacDPI OneClick.command** kısayolunu aç.
+**GitHub'da “Source code” dosyalarını değil, `MacDPI-OneClick-v1.6.1.zip` dosyasını indir.**
 
-**v1.5.0 kuruluysa:** yükseltmeyi Masaüstündeki eski kısayoldan değil, yeni çıkardığın **v1.6.0 klasöründen** başlatıp bir kez **1** seç. Yeni paket kendi kurucusunu kullanır. Yükseltmeden sonra **5 — Onar** da yeni düzeltmeleri korur.
+### Mac dosyayı açtırmazsa
 
-Paket hazır üçüncü taraf binary içermez; kaynak kod yerel olarak derlenir. ZIP'in yanındaki `.sha256` dosyası indirme bütünlüğünü kontrol etmek içindir.
+Önce dosyaya sağ tıkla → **Aç** seç. Hâlâ izin vermiyorsa **Sistem Ayarları → Gizlilik ve Güvenlik** bölümündeki bu dosyaya ait **Yine de Aç** seçeneğini kullan. Bu adım yalnızca dosyanın geliştiricisinin doğrulanamadığı uyarısı içindir. “Kötü amaçlı yazılım” veya “bilgisayarınıza zarar verecek” uyarısı varsa dur; güvenlik korumasını kapatma.
+
+### Sonraki kullanımlarda
+
+Masaüstündeki **MacDPI** kısayolunu aç:
+
+- **2 + Enter:** DPI'yi aç.
+- **3 + Enter:** DPI'yi kapat.
+- **4 + Enter:** Bağlantıyı kontrol et.
+- **7 + Enter:** İnternet sorunu olursa ağ ayarlarını kurtar.
+
+Kurulum servis olarak çalışır. Mac açıldığında Wi-Fi/IP hazır olana kadar bekler;
+DPI bileşenlerinden biri kapanırsa kendini yeniden başlatır. Terminal menüsünü
+kapatmak DPI'yi kapatmaz; kapatmak için **3** seç.
+
+## Bu sürümde ne düzeldi?
+
+Mac yeniden açıldıktan sonra internet için DPI'yi elle kapatıp açma sorunu için
+başlangıçta ağ bekleme ve bileşen takibi eklendi. Önceki Discord güncelleme düzeltmeleri korundu.
+Kullanıcı kendi Mac'inde düzeltmenin işe yaradığını bildirdi; tüm Mac modelleri/ağlar ve Discord sesli kanal bağlantıları test edilmiş değildir.
+
+---
+
+## Teknik ayrıntılar ve kurtarma
 
 ## Menü
 

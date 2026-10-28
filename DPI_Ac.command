@@ -17,7 +17,7 @@ if [ ! -d "$DIR" ]; then
   exit 1
 fi
 
-if [ "$(cat "$DIR/oneclick-runtime-version" 2>/dev/null || true)" != "1.6.0" ]; then
+if [ "$(cat "$DIR/oneclick-runtime-version" 2>/dev/null || true)" != "1.6.1" ]; then
   echo "Önce yeni paketten 1 — Kurulum seç / Run option 1 from the new package first."
   exit 1
 fi

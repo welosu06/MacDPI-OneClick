@@ -1,8 +1,21 @@
 diff --git a/Run.sh b/Run.sh
-index c5735f4..3a6ec48 100755
+index c5735f4..12d9d50 100755
 --- a/Run.sh
 +++ b/Run.sh
-@@ -84,7 +84,7 @@ cleanup() {
+@@ -18,7 +18,11 @@ sudo sysctl -w kern.maxfiles=9999999999 >/dev/null
+ sudo sysctl -w kern.maxfilesperproc=9999999999 >/dev/null
+ ulimit -n 1048576
+ 
+-net_iface=$(route -n get default 2>/dev/null | awk '/interface:/{print $2}')
++# Do not create a TUN until DHCP and the physical default route are ready.
++. ./core/NetworkReady.sh
++trap 'exit 0' INT TERM
++wait_for_network || exit 1
++net_iface="$MACDPI_BIND_INTERFACE"
+ net_svc=$(networksetup -listallhardwareports 2>/dev/null | awk -v dev="$net_iface" '
+     /^Hardware Port:/ { port = substr($0, 16) }
+     /^Device:/        { if ($2 == dev) { print port; exit } }')
+@@ -84,17 +88,25 @@ cleanup() {
          sudo -n kill -KILL -"$box_pid" 2>/dev/null
      fi
  
@@ -11,11 +24,19 @@ index c5735f4..3a6ec48 100755
  
      echo "Stopped."
  }
-@@ -94,7 +94,10 @@ trap cleanup INT TERM EXIT
+ 
+-trap cleanup INT TERM EXIT
++trap cleanup EXIT
++trap 'exit 0' INT TERM
+ 
  ./core/RunDPI.sh &
  dpi_pid=$!
  
 -./net/SetStaticIP.sh || echo "Static IP not set; bypass still works but disconnects may occur."
++# If the proxy fails at startup, never leave a TUN pointing at a dead proxy.
++sleep 1
++kill -0 "$dpi_pid" 2>/dev/null || { echo "DPI failed to start; retrying via launchd."; exit 1; }
++
 +# gVisor repair keeps the current IP configuration.
 +if [ "${MACDPI_USE_STATIC_IP:-0}" = "1" ]; then
 +    ./net/SetStaticIP.sh || echo "Static IP not set; bypass still works but disconnects may occur."
@@ -23,6 +44,29 @@ index c5735f4..3a6ec48 100755
  
  sudo networksetup -setdnsservers "$net_svc" 1.1.1.1
  sudo dscacheutil -flushcache 2>/dev/null; sudo killall -HUP mDNSResponder 2>/dev/null
+@@ -102,4 +114,21 @@ sudo dscacheutil -flushcache 2>/dev/null; sudo killall -HUP mDNSResponder 2>/dev
+ ./core/RunSingBox.sh &
+ box_pid=$!
+ 
+-wait
++# Waiting on all background jobs also waits on the perpetual log watcher.
++# Supervise the two actual workers so launchd can recover a failed worker.
++network_misses=0
++while kill -0 "$dpi_pid" 2>/dev/null && kill -0 "$box_pid" 2>/dev/null; do
++    sleep 2
++    current_network=$(physical_network)
++    if [ "$current_network" = "$MACDPI_NETWORK_SIGNATURE" ]; then
++        network_misses=0
++    else
++        network_misses=$((network_misses + 1))
++        if [ "$network_misses" -ge 3 ]; then
++            echo "Physical network changed or disconnected; restarting safely."
++            exit 1
++        fi
++    fi
++done
++echo "DPI or TUN worker exited; restarting safely."
++exit 1
 diff --git a/ServiceRemove.sh b/ServiceRemove.sh
 index 22e80ab..3722277 100755
 --- a/ServiceRemove.sh
@@ -74,18 +118,52 @@ index 82eb68a..3ae9c8a 100755
      }
    ],
    "outbounds": [
+diff --git a/core/NetworkReady.sh b/core/NetworkReady.sh
+new file mode 100644
+index 0000000..02f9f8e
+--- /dev/null
++++ b/core/NetworkReady.sh
+@@ -0,0 +1,27 @@
++#!/bin/bash
++physical_network() {
++    local iface addr
++    iface=$(/sbin/route -n get default 2>/dev/null | /usr/bin/awk '/interface:/{print $2; exit}')
++    case "$iface" in en[0-9]*) ;; *) return 1 ;; esac
++    addr=$(/usr/sbin/ipconfig getifaddr "$iface" 2>/dev/null) || return 1
++    case "$addr" in ''|0.*|169.254.*) return 1 ;; esac
++    printf '%s %s\n' "$iface" "$addr"
++}
++wait_for_network() {
++    local previous='' current='' stable=0
++    echo "Waiting for a stable physical network before starting DPI..."
++    while [ "$stable" -lt 3 ]; do
++        current=$(physical_network) || current=''
++        if [ -n "$current" ] && [ "$current" = "$previous" ]; then
++            stable=$((stable + 1))
++        else
++            stable=0
++        fi
++        previous="$current"
++        [ "$stable" -ge 3 ] || sleep 2
++    done
++    MACDPI_NETWORK_SIGNATURE="$current"
++    MACDPI_BIND_INTERFACE="${current%% *}"
++    export MACDPI_BIND_INTERFACE
++    echo "Physical network ready: $MACDPI_BIND_INTERFACE"
++}
 diff --git a/core/RunDPI.sh b/core/RunDPI.sh
-index c71f23b..729f81f 100755
+index c71f23b..6276311 100755
 --- a/core/RunDPI.sh
 +++ b/core/RunDPI.sh
-@@ -7,6 +7,12 @@ CIADPI_ARGS=""
+@@ -7,6 +7,13 @@ CIADPI_ARGS=""
  MAX_CONN=512
  [ -f settings.conf ] && . ./settings.conf
  
 +# Bypass the TUN for desynchronized outbound packets on macOS.
-+MACDPI_BIND_INTERFACE="$(/sbin/route -n get default 2>/dev/null | /usr/bin/awk '/interface:/{print $2; exit}')"
-+[ -n "$MACDPI_BIND_INTERFACE" ] || { echo "No physical interface found" >&2; exit 1; }
-+case "$MACDPI_BIND_INTERFACE" in utun*) echo "Default interface is a tunnel; refusing to loop" >&2; exit 1 ;; esac
++. ./core/NetworkReady.sh
++if [ -z "${MACDPI_BIND_INTERFACE:-}" ]; then
++    wait_for_network || exit 1
++fi
 +export MACDPI_BIND_INTERFACE
 +
  # Each connection uses ~2 fds; make sure the fd limit clears the pool size. Run.sh

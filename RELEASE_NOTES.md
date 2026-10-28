@@ -1,23 +1,28 @@
-## Türkçe
+## Mac için yeni sürüm: v1.6.1
 
-Discord uygulamasındaki **Update Failed / Retrying** sorunu için doğrulanan düzeltmeler:
+Mac'i kapatıp açınca internetin gelmemesi ve DPI'yi elle kapatıp açma gereği için düzeltme eklendi. Önceki Discord düzeltmeleri de bu pakette.
 
-- gVisor TUN ağ yığını.
-- ciadpi dış bağlantılarının fiziksel ağ arayüzüne bağlanması.
-- macOS SecureTransport ile doğrulanan `--split 2` yöntemi.
-- Varsayılan `.240` statik IP değişiminin kaldırılması; DNS yedeği ve geri yüklemenin korunması.
-- Kurulum ve Onar işlemlerinin kaynak yamalarını yeniden uygulaması.
-- Yeni ZIP'in eski kurucuyu seçmesi ve başarısız kurulumun işlem kilidini tutması sorunlarının düzeltilmesi.
-- Genel internet ve Discord güncelleme HTTPS testlerinin ayrı raporlanması.
+## Kurulum — sırayla yap
 
-**İndir:** `MacDPI-OneClick-v1.6.0.zip`. ZIP'i aç, yeni klasördeki `MacDPI.command` dosyasını çalıştır ve **1** seç. Yükseltmeden sonra Masaüstü kısayolunu kullanabilirsin.
+1. Aşağıdaki **MacDPI-OneClick-v1.6.1.zip** dosyasını indir. **Source code** yazanları indirme.
+2. İndirilen ZIP'e iki kez tıkla. Açılan **MacDPI-OneClick-v1.6.1** klasörüne gir.
+3. **MacDPI.command** dosyasını aç. Terminal penceresi açılacak; normaldir.
+4. **1** yaz → **Enter** bas. **Eski sürüm yüklüyse de güncellemek için 1 seç.**
+5. Mac şifren istenirse yaz → **Enter** bas. Şifre yazarken ekranda hiçbir şey görünmez; normaldir.
+6. “Kurulum başarılı” mesajını bekle. İlk kurulum birkaç dakika sürebilir; pencereyi kapatma.
+7. Discord'u tamamen kapatıp tekrar aç.
 
-Sorunun yaşandığı Apple Silicon Mac'te Discord güncellemeleri tamamlayıp açıldı. Sesli kanal/UDP ve tüm ağlar için doğrulama yapılmadı. Paket hazır üçüncü taraf binary içermez; yamalı kaynaklar yerel derlenir. Sertifika doğrulaması açık kalır.
+**[ZIP'i buradan indir](https://github.com/welosu06/MacDPI-OneClick/releases/download/v1.6.1/MacDPI-OneClick-v1.6.1.zip)**
 
-## English
+Dosya yalnızca geliştiricisi doğrulanamadığı için açılmıyorsa: sağ tık → Aç; gerekirse Sistem Ayarları → Gizlilik ve Güvenlik → Yine de Aç. Kötü amaçlı yazılım uyarısı çıkarsa çalıştırma.
 
-Fixes the reproduced Discord desktop **Update Failed / Retrying** case with gVisor TUN, macOS physical-interface socket binding and the native-TLS-tested `--split 2` strategy. The current IP configuration is kept by default. Install/Repair reapply the source patches; upgrades prefer the extracted package over older installed launchers, and failed installers release their own operation lock before waiting for input.
+## Kullanım
 
-General internet and Discord updater health are reported separately. Download the ZIP, extract it and run option **1** from the new package. The ZIP contains scripts and auditable patches; third-party binaries are built locally. Certificate verification remains enabled.
+Masaüstündeki MacDPI kısayolunu aç: **2 = aç**, **3 = kapat**, **4 = kontrol et**, **7 = interneti kurtar**.
+Mac açılırken artık ağın hazır olmasını bekler. Terminal menüsünü kapatmak DPI'yi kapatmaz.
 
-The updater completed and the application opened on the Apple Silicon Mac where the fault was reproduced. Voice/UDP and every possible network are not covered by that test. See README and SECURITY for the recovery flow and limitations.
+Bu paket **yalnızca Mac içindir**; Windows beta paketiyle aynı değildir. İlgili Mac'te kullanıcı başarı bildirdi. Her ağ/Mac modeli ve Discord ses/UDP bağlantısı için garanti verilmez.
+
+### Technical changes
+
+Stable physical IPv4 network gating before TUN startup, worker supervision, restart after sustained network changes, and correct signal-driven exit. Install/Repair preserve the fix. Automated regression tests and ZIP verification run before publication.

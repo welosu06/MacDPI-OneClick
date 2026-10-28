@@ -1,3 +1,11 @@
+## 1.6.1 — 2026-10-29
+
+- Wait for a stable physical interface and IPv4 address before starting DPI/TUN.
+- Stop and let launchd restart if either worker exits, rather than waiting forever on helper jobs.
+- Restart on sustained interface/address changes; ensure termination exits after cleanup.
+- Include the boot repair in fresh installs and repairs; add regression tests.
+- Add short Turkish install/upgrade instructions with direct ZIP links.
+
 # Changelog
 
 ## v1.6.0 — 2026-10-25

@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-VERSION="1.6.0"
+VERSION="1.6.1"
 ROOT="$HOME/.macdpi-oneclick"
 UPSTREAM_DIR="$ROOT/MacDPI"
 UPSTREAM_URL="https://github.com/monotter/MacDPI.git"
@@ -253,7 +253,7 @@ Architecture: $ARCH
 Upstream: $UPSTREAM_URL
 Pinned MacDPI commit: $UPSTREAM_COMMIT
 Mode: global
-Runtime fixes: 1.6.0 (gVisor, interface binding, split 2)
+Runtime fixes: 1.6.1 (gVisor, interface binding, split 2, boot recovery)
 Static IP: disabled by default
 Go: $("$GO_BIN" version)
 EOF

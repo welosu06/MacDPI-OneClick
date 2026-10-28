@@ -5,7 +5,7 @@ ROOT="$(pwd)"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 for file in *.command *.sh scripts/*.sh tests/*.sh; do /bin/bash -n "$file"; done
-test "$(cat VERSION)" = 1.6.0
+test "$(cat VERSION)" = 1.6.1
 
 git clone -q --no-hardlinks "${MACDPI_TEST_UPSTREAM:-https://github.com/monotter/MacDPI.git}" "$TMP/upstream"
 git -C "$TMP/upstream" checkout -q 30556c5dd90d23819e32b4c2bfb8b8b670cde8a4
@@ -18,7 +18,8 @@ grep -q '"stack": "gvisor"' "$TMP/upstream/core/GenConfig.sh"
 grep -q '^CIADPI_ARGS="-I 0.0.0.0 --split 2"$' "$TMP/upstream/settings.conf"
 grep -q 'export MACDPI_BIND_INTERFACE' "$TMP/upstream/core/RunDPI.sh"
 grep -q 'git -C "$BYEDPI_DIR" apply --check' "$TMP/upstream/bin/Build.sh"
-test "$(cat "$TMP/upstream/oneclick-runtime-version")" = 1.6.0
+test "$(cat "$TMP/upstream/oneclick-runtime-version")" = 1.6.1
+/bin/bash tests/test-boot.sh "$TMP/upstream"
 
 git init -q "$TMP/wrong-revision"
 git -C "$TMP/wrong-revision" -c user.name=Test -c user.email=test@example.invalid commit -q --allow-empty -m test

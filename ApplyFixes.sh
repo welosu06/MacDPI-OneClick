@@ -20,8 +20,8 @@ else
 fi
 cp -p "$SELF_DIR/patches/byedpi-macos-interface.patch" "$TARGET/bin/byedpi-macos-interface.patch"
 sed -i '' 's/^CIADPI_ARGS=.*/CIADPI_ARGS="-I 0.0.0.0 --split 2"/' "$TARGET/settings.conf"
-for file in Run.sh ServiceRemove.sh core/RunDPI.sh core/GenConfig.sh bin/Build.sh; do
+for file in Run.sh ServiceRemove.sh core/RunDPI.sh core/NetworkReady.sh core/GenConfig.sh bin/Build.sh; do
   /bin/bash -n "$TARGET/$file"
 done
-printf '%s\n' '1.6.0' > "$TARGET/oneclick-runtime-version"
-echo "OneClick 1.6.0 fixes applied: gVisor, physical-interface binding, split 2."
+printf '%s\n' '1.6.1' > "$TARGET/oneclick-runtime-version"
+echo "OneClick 1.6.1 fixes applied: gVisor, physical-interface binding, split 2, network readiness and worker recovery."

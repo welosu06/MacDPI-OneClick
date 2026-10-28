@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.6.0"
+VERSION="1.6.1"
 ROOT="$HOME/.macdpi-oneclick"
 INSTALLED_LAUNCHER="$ROOT/launcher"
 SELF_DIR="$(cd "$(dirname "$0")" && pwd)"
